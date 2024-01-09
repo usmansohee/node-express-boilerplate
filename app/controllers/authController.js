@@ -1,0 +1,70 @@
+const database = require("../models");
+const config = require("../config/auth.config.js");
+const User = database.User;
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+// import { isJwtExpired } from 'jwt-check-expiration';
+const isJwtExpired = require('jwt-check-expiration')
+
+exports.signUp = (request, response) => {
+    return User.create({
+        username: request.body.username,
+        email: request.body.email,
+        password: bcrypt.hashSync(request.body.password, 8)
+    })
+        .then(newUser => response.status(201).send(newUser))
+        .catch(error => response.status(500).send(error));
+}
+
+exports.signIn = (request, response) => {
+    const signInError = { accessToken: null, error: "Invalid username or password" };
+
+    return User.findOne({ where: { username: request.body.username } })
+        .then(user => {
+            console.log(user, 'usr')
+            if (!user) return response.status(401).send(signInError);
+            const validPassword = bcrypt.compareSync(request.body.password, user.password);
+            if (!validPassword) return response.status(401).send(signInError);
+            const token = jwt.sign({ id: user.id }, config.secret, { expiresIn: 86400 });
+            response.status(200).send({ id: user.id, username: user.username, accessToken: token });
+        })
+        .catch(error => response.status(500).send(error));
+}
+
+exports.authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ result: 'Unauthorized' });
+    }
+
+    const result = verifyAccessToken(token);
+
+
+
+
+
+    if (!result.success) {
+        return res.status(403).json({ error: result.error, expire: isJwtExpired(token) });
+    } else
+        return res.status(200).json({ result: result.data, expire: isJwtExpired(token) });
+
+
+    req.user = result.data;
+    next();
+}
+
+function verifyAccessToken(token) {
+    const secret = 'your-secret-key';
+
+    console.log('usman')
+
+    try {
+        const decoded = jwt.verify(token, config.secret);
+        console.log(decoded, 'decoded');
+        return { success: true, data: decoded };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
