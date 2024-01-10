@@ -1,7 +1,7 @@
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
-const bcrypt = require( "bcryptjs" );
+const bcrypt = require("bcryptjs");
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -15,7 +15,7 @@ module.exports = {
      * }], {});
     */
     return await queryInterface.bulkInsert("Users", [
-      { username: "admin", email: "admin@admin.com", password: bcrypt.hashSync( 'admin', 8 ), createdAt: new Date(), updatedAt: new Date() }
+      { username: "admin", email: "admin@admin.com", password: bcrypt.hashSync('admin', 8), createdAt: new Date(), updatedAt: new Date() }
     ]);
   },
 

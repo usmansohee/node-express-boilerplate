@@ -3,8 +3,6 @@ const config = require("../config/auth.config.js");
 const User = database.User;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-// import { isJwtExpired } from 'jwt-check-expiration';
-const isJwtExpired = require('jwt-check-expiration')
 
 exports.signUp = (request, response) => {
     return User.create({
@@ -31,40 +29,6 @@ exports.signIn = (request, response) => {
         .catch(error => response.status(500).send(error));
 }
 
-exports.authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ result: 'Unauthorized' });
-    }
-
-    const result = verifyAccessToken(token);
-
-
-
-
-
-    if (!result.success) {
-        return res.status(403).json({ error: result.error, expire: isJwtExpired(token) });
-    } else
-        return res.status(200).json({ result: result.data, expire: isJwtExpired(token) });
-
-
-    req.user = result.data;
-    next();
-}
-
-function verifyAccessToken(token) {
-    const secret = 'your-secret-key';
-
-    console.log('usman')
-
-    try {
-        const decoded = jwt.verify(token, config.secret);
-        console.log(decoded, 'decoded');
-        return { success: true, data: decoded };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
+exports.verifiedToken = (req, res, next) => {
+    return res.status(200).send({ status: 'token valid' });
 }
